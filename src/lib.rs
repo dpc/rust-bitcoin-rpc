@@ -48,9 +48,35 @@ macro_rules! rpc_request {
         {
             let request = $client.build_request($name, $params);
             let response = $client.send_request(&request)
-                .context(ErrorKind::BadResponse)?;
-            response.into_result()
-                .context(ErrorKind::MalformedResponse)?
+                .context(ErrorKind::BadResponse);
+            if response.is_err() {
+                eprintln!("Request: {:?}", request);
+                eprintln!("Response: {:?}", response);
+            }
+            let response = response?;
+            let response = response.into_result()
+                .context(ErrorKind::MalformedResponse);
+
+            if response.is_err() {
+                eprintln!("Request: {:?}", request);
+                eprintln!("Response: {:?}", response);
+            }
+            response?
+        }
+    }
+}
+
+macro_rules! rpc_request_no_res {
+    ($client:expr, $name:expr, $params:expr) => {
+        {
+            let request = $client.build_request($name, $params);
+            let response = $client.send_request(&request)
+                .context(ErrorKind::BadResponse);
+            if response.is_err() {
+                eprintln!("Request: {:?}", request);
+                eprintln!("Response: {:?}", response);
+            }
+            let _response = response?;
         }
     }
 }
